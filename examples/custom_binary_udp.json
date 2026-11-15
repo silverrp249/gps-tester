@@ -1,0 +1,13 @@
+{
+  "name": "acme-binary-udp",
+  "transport": "udp",
+  "port": 6001,
+  "encoding": "hex",
+  "checksum": {"algorithm": "crc16_x25", "format": "{:04x}"},
+  "messages": {
+    "location": {
+      "template": "aa55 {imei_bcd} {seq:04x} {timestamp:08x} {lat_e7:08x} {lon_e7:08x} {speed_int:04x} {course_int:04x} {satellites:02x} {checksum} 0d0a",
+      "expect_response": false
+    }
+  }
+}

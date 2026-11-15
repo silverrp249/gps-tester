@@ -1,0 +1,36 @@
+# Custom protocol template for gps-tester.
+#   gps-tester --config examples/custom_device.yaml --mode validate
+#   gps-tester-mock --config examples/custom_device.yaml --port 6000   (local mock server)
+
+name: acme-tracker
+transport: tcp            # tcp | udp
+host: 127.0.0.1           # optional - can also be given with --host
+port: 6000                # optional - can also be given with --port
+encoding: text            # text = UTF-8 string, hex = template renders to hex digits
+
+checksum:
+  algorithm: xor8         # none | xor8 | sum8 | crc16_x25 (CRC-ITU) | crc16_ibm
+  format: "{:02X}"        # how the value is written where {checksum} appears
+  skip: 1                 # bytes at the start excluded from the checksum (the "$")
+
+messages:
+  login:                                  # optional, sent once after connecting
+    template: "$LOGIN,{imei}*{checksum}\r\n"
+    expect_response: true                 # wait for a server reply and measure latency
+    expect: "OK"                          # optional: reply must contain this
+    mock_match: "$LOGIN"                  # only used by gps-tester-mock
+    mock_reply: "OK\r\n"
+  location:                               # required
+    template: "$POS,{imei},{date},{time},{lat:.6f},{lon:.6f},{speed:.1f},{course:.0f},{altitude:.0f},{satellites},{ignition}*{checksum}\r\n"
+    expect_response: false
+  heartbeat:                              # optional
+    template: "$PING,{imei},{seq}*{checksum}\r\n"
+    expect_response: true
+    expect: "PONG"
+    mock_match: "$PING"
+    mock_reply: "PONG\r\n"
+
+# Placeholders: imei imei_bcd index seq lat lon lat_abs lon_abs ns ew lat_nmea lon_nmea
+# lat_e7 lon_e7 speed speed_int speed_knots course course_int altitude altitude_int
+# satellites ignition odometer timestamp timestamp_ms date time datetime
+# year month day hour minute second checksum
